@@ -172,4 +172,8 @@ This project is open source and available under the [MIT License](LICENSE).
 Pull requests are welcome! Feel free to open an issue for bugs or feature requests.
 
 ---
+## uses 
+# it can be used in gimble project 
+# game gyro controller for pc 
+# bike accleration meter or lean angle recorder. ETC
 
