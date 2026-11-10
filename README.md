@@ -183,6 +183,16 @@ it can be used in other things to know the state the object in
 
 ---
 
+## Skills & technologies
+
+`Arduino/C++`
+
+
+## How it works
+
+The main firmware sketch is `adxl345_esp32.ino`. Open it in Arduino IDE, verify the board, pin mapping and library requirements, then compile and upload. Test hardware behaviour on the real circuit before relying on it.
+
+
 ## Maintenance & Audit
 
 - **Audit date:** 10 November 2026
