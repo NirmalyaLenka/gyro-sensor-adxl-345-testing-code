@@ -1,202 +1,110 @@
-# gyro-sensor-adxl-345-testing-code
-# ESP32 + ADXL345 Accelerometer 
+# ESP32 + ADXL345 Accelerometer
 
-Read **X, Y, Z acceleration**, detect **tilt direction**, and monitor **free fall** using an ADXL345 accelerometer with an ESP32 microcontroller.
+A compact Arduino example for reading three-axis acceleration from an ADXL345 accelerometer over I2C. The sketch prints X/Y/Z acceleration, vector magnitude, a simple dominant-axis tilt estimate, and a basic low-magnitude warning to the Serial Monitor.
 
----
+**Terminology:** ADXL345 is an accelerometer, not a gyroscope. It measures linear acceleration and gravity; it does not directly measure angular velocity.
 
-##  Components Required
+## Features
 
-| Component | Quantity |
-|-----------|----------|
-| ESP32 Dev Board | 1 |
-| ADXL345 Sensor Module | 1 |
-| Jumper Wires | 6 |
-| Breadboard (optional) | 1 |
+- Read X, Y, and Z acceleration in m/s²
+- Calculate acceleration-vector magnitude
+- Estimate a coarse tilt direction from the dominant axis
+- Demonstrate a low-magnitude threshold warning
+- Configure measurement range and sensor output data rate
 
----
+The current sketch polls every 500 ms and checks whether the measured magnitude is below 2 m/s². This is a **learning demonstration only**, not reliable free-fall detection or a safety feature. Short events can be missed; real event detection should use the ADXL345's hardware interrupt features and an appropriately validated sampling strategy. The current sketch does not implement tap-event detection.
 
-##  Wiring Diagram (I2C Mode)
+## Hardware
 
-```
-ADXL345         ESP32
--------         -----
-VCC    ──────►  3.3V
-GND    ──────►  GND
-SDA    ──────►  GPIO 21
-SCL    ──────►  GPIO 22
-CS     ──────►  3.3V   (enables I2C mode)
-SDO    ──────►  GND    (sets I2C address to 0x53)
-```
+- ESP32 development board
+- ADXL345 breakout/module
+- Jumper wires
+- Breadboard (optional)
 
->  **Important:** Use **3.3V** only! The ADXL345 is NOT 5V tolerant.  
->  Connect **CS to 3.3V** to enable I2C mode (floating CS defaults to SPI).  
-> **SDO to GND** sets I2C address `0x53`. SDO to 3.3V sets address `0x1D`.
+## Wiring — I2C
 
----
+| ADXL345 module | ESP32 |
+| --- | --- |
+| VCC | 3.3 V |
+| GND | GND |
+| SDA | GPIO 21 |
+| SCL | GPIO 22 |
+| CS | 3.3 V to select I2C mode |
+| SDO | GND for I2C address 0x53 |
 
-##  Setup & Installation
+The ADXL345 sensor is a low-voltage device. Check the breakout's datasheet before powering it; do not assume every module accepts 5 V. With the ESP32, use 3.3 V logic.
 
-### 1. Install Arduino IDE
-Download from [arduino.cc](https://www.arduino.cc/en/software)
+## Bill of materials
 
-### 2. Add ESP32 Board Support
-1. Open **Arduino IDE** → **File** → **Preferences**
-2. Add this URL to *Additional Boards Manager URLs*:
-   ```
-   https://raw.githubusercontent.com/espressif/arduino-esp32/gh-pages/package_esp32_index.json
-   ```
-3. Go to **Tools** → **Board** → **Boards Manager**
-4. Search for `esp32` and click **Install**
+| Item | Qty. | Notes |
+| --- | ---: | --- |
+| ESP32 development board | 1 | ESP32 Dev Module profile used in the guide |
+| ADXL345 breakout | 1 | Confirm module pin labels and voltage limits |
+| Jumper wires | 6 | VCC, GND, SDA, SCL, CS, SDO |
+| Breadboard | 1, optional | For prototyping |
+| USB data cable | 1 | Upload and serial monitoring |
 
-### 3. Install Required Libraries
-1. Go to **Sketch** → **Include Library** → **Manage Libraries**
-2. Search and install the following:
-   - **Adafruit ADXL345** by Adafruit
-   - **Adafruit Unified Sensor** by Adafruit
+This is the current single-sensor prototype BOM. It does not include an enclosure, battery, display, or mechanical mounting hardware.
 
-### 4. Upload the Sketch
-1. Open `adxl345_esp32.ino` in Arduino IDE
-2. Select your board: **Tools** → **Board** → **ESP32 Dev Module**
-3. Select the correct **Port** under **Tools** → **Port**
-4. Click **Upload** 
+## Software setup
 
----
+1. Install the [Arduino IDE](https://www.arduino.cc/en/software).
+2. Install ESP32 board support using Espressif's board manager package:
+   `https://raw.githubusercontent.com/espressif/arduino-esp32/gh-pages/package_esp32_index.json`
+3. In Library Manager, install **Adafruit ADXL345** and **Adafruit Unified Sensor**.
+4. Open `adxl345_esp32.ino`.
+5. Select the appropriate ESP32 board and serial port, then compile and upload.
+6. Open Serial Monitor at **115200 baud**.
 
-##  Serial Monitor Output
+## Configuration
 
-Open Serial Monitor at **115200 baud** to see live readings:
+The sketch currently uses:
 
-```
-=================================
-  ESP32 + ADXL345 Sensor Demo   
-=================================
-Sensor Name : ADXL345
-Max Range   : 156.96 m/s^2
-Resolution  : 0.04 m/s^2
----------------------------------
-ADXL345 initialized successfully!
-
---- Accelerometer Readings ---
-X Axis    : 0.1570 m/s^2
-Y Axis    : -0.3530 m/s^2
-Z Axis    : 9.7340 m/s^2
-Magnitude : 9.7467 m/s^2
-Tilt      : Flat / Level
-------------------------------
-```
-
----
-
-##  Configuration
-
-### Measurement Range
-Change sensitivity range in the code:
 ```cpp
-accel.setRange(ADXL345_RANGE_2_G);   // ±2g  — most sensitive (default)
-accel.setRange(ADXL345_RANGE_4_G);   // ±4g
-accel.setRange(ADXL345_RANGE_8_G);   // ±8g
-accel.setRange(ADXL345_RANGE_16_G);  // ±16g — least sensitive
+accel.setRange(ADXL345_RANGE_2_G);
+accel.setDataRate(ADXL345_DATARATE_100_HZ);
 ```
 
-### Data Rate
-Change how frequently the sensor samples:
-```cpp
-accel.setDataRate(ADXL345_DATARATE_100_HZ);  // 100 samples/sec (default)
-accel.setDataRate(ADXL345_DATARATE_200_HZ);  // 200 samples/sec
-accel.setDataRate(ADXL345_DATARATE_50_HZ);   // 50 samples/sec
+Available ranges in the library include ±2 g, ±4 g, ±8 g, and ±16 g. The sensor data rate is configured to 100 Hz, but the sketch only reads and prints data every 500 ms; these are different rates. The loop's polling interval limits how quickly software can react to brief events.
+
+## Repository structure
+
+```text
+gyro-sensor-adxl-345-testing-code/
+├── adxl345_esp32.ino   # ESP32 firmware sketch
+└── README.md           # Wiring, setup, BOM, limitations, and maintenance
 ```
 
----
+## Troubleshooting
 
-##  Features
+| Problem | Checks |
+| --- | --- |
+| Sensor not found | Verify VCC/GND, SDA GPIO 21, SCL GPIO 22, CS high, and SDO low |
+| Serial output is unreadable | Set the monitor to 115200 baud |
+| Values are unexpectedly zero | Check wiring, sensor orientation, and library installation |
+| Tilt label looks wrong | The current method is a coarse dominant-axis estimate, not a calibrated attitude solution |
+| Brief motion event is missed | The 500 ms polling/printing loop is too slow for reliable transient detection |
 
-| Feature | Description |
-|---------|-------------|
-| X / Y / Z Axes | Raw acceleration in m/s² |
-| Magnitude | Total vector magnitude of acceleration |
-| Tilt Detection | Detects Left, Right, Forward, Backward, Upside Down, Flat |
-| Free Fall Detection | Triggers when total magnitude drops below 2 m/s² |
+## Libraries
 
----
+- [Adafruit ADXL345](https://github.com/adafruit/Adafruit_ADXL345) — accelerometer driver
+- [Adafruit Unified Sensor](https://github.com/adafruit/Adafruit_Sensor) — common sensor interface
+- `Wire` — I2C support supplied by the ESP32 Arduino core
 
-##  Troubleshooting
+## Potential extensions
 
-| Problem | Solution |
-|--------|----------|
-| `ADXL345 sensor not found!` | Check CS → 3.3V and SDO → GND; verify SDA/SCL pins |
-| Garbage in Serial Monitor | Set baud rate to **115200** |
-| All values read 0.0 | CS pin might be floating — connect firmly to 3.3V |
-| Board not detected | Install CP210x or CH340 USB driver for your ESP32 board |
-| Sensor found but bad data | Try pulling SDA/SCL lines up with 4.7kΩ resistors to 3.3V |
+- Use ADXL345 interrupt pins for data-ready and validated free-fall detection
+- Add a rolling data logger or serial plotter output
+- Calibrate axis offsets and document sensor orientation
+- Add a proper mounting bracket before using it for motion measurements
 
----
+## Skills and technologies
 
-##  Project Structure
+`Embedded C++` · `ESP32` · `I2C` · `Accelerometers` · `Sensor interfacing`
 
-```
-esp32-adxl345/
-│
-├── adxl345_esp32.ino   # Main Arduino sketch
-└── README.md           # This file
-```
+## Maintenance & audit
 
----
-
-##  Libraries Used
-
-- [Adafruit ADXL345](https://github.com/adafruit/Adafruit_ADXL345) — ADXL345 accelerometer driver
-- [Adafruit Unified Sensor](https://github.com/adafruit/Adafruit_Sensor) — unified sensor abstraction layer
-- [Wire](https://www.arduino.cc/reference/en/language/functions/communication/wire/) — built-in I2C library
-
----
-
-##  Project Ideas
-
--  Gesture-controlled robot or car
--  Motion-based game controller
--  Shock/vibration logger for fragile packages
--  Workout rep counter
--  Tilt-based servo motor control
-
----
-
-##  License
-
-This project is open source and available under the [MIT License](LICENSE).
-
----
-
-##Contributing
-
-Pull requests are welcome! Feel free to open an issue for bugs or feature requests.
-
----
-## uses 
-# it can be used in gimble project 
-# game gyro controller for pc 
-# bike accleration meter or lean angle recorder. ETC
-it can be used in other things to know the state the object in
-
-
-
-
----
-
-## Skills & technologies
-
-`Arduino/C++`
-
-
-## How it works
-
-The main firmware sketch is `adxl345_esp32.ino`. Open it in Arduino IDE, verify the board, pin mapping and library requirements, then compile and upload. Test hardware behaviour on the real circuit before relying on it.
-
-
-## Maintenance & Audit
-
-- **Audit date:** 10 November 2026
-- **Documentation status:** README reviewed and audit record added on this date.
-- **Scope and evidence:** This entry records a documentation-level maintenance pass. It does not by itself establish that source code compiles, dependencies are current, security has been tested, or hardware/runtime behavior has been verified.
-- **Code and tests:** No new functional code changes or test results are claimed by this README update. Run the project-specific build, test, and hardware/runtime checks before relying on it.
-- **Maintenance baseline:** Documentation status recorded through 10 November 2026; revisit dependencies, setup instructions, known limitations, and tests whenever the project changes.
+- **Last updated:** 10 November 2026
+- **Review scope:** Checked the tracked sketch against the README's feature claims, wiring, BOM, and setup notes.
+- **Documentation changes:** Clarified that ADXL345 is an accelerometer, documented the actual 500 ms polling loop, removed the unsupported tap-detection claim, and qualified the free-fall threshold as a demo only.
+- **Validation boundary:** No firmware change was made and no compilation or hardware test was run. No `LICENSE` file was found in the current root listing, so no license is claimed here.
