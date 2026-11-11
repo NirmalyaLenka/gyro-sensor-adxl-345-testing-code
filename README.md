@@ -104,7 +104,7 @@ gyro-sensor-adxl-345-testing-code/
 
 ## Maintenance & audit
 
-- **Last updated:** 10 November 2026
+- **Last updated:** 11 November 2026
 - **Review scope:** Checked the tracked sketch against the README's feature claims, wiring, BOM, and setup notes.
 - **Documentation changes:** Clarified that ADXL345 is an accelerometer, documented the actual 500 ms polling loop, removed the unsupported tap-detection claim, and qualified the free-fall threshold as a demo only.
 - **Validation boundary:** No firmware change was made and no compilation or hardware test was run. No `LICENSE` file was found in the current root listing, so no license is claimed here.
